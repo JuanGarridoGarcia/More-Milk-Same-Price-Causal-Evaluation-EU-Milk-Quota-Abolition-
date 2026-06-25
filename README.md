@@ -1,6 +1,6 @@
 # More Milk, Same Price: A Causal Evaluation of the EU Milk-Quota Abolition
 
-**A causal evaluation of the 2015 EU milk-quota abolition — estimating its effect on production, farm-gate price, and ultimately farm income, using difference-in-differences and synthetic control, triangulated across four methods.**
+**A causal evaluation of the 2015 EU milk-quota abolition, estimating its effect on production, farm-gate price, and ultimately farm income, using difference-in-differences and synthetic control, triangulated across four methods.**
 
 ![Python](https://img.shields.io/badge/Python-3.13-blue?logo=python)
 ![License](https://img.shields.io/badge/License-MIT-green)
