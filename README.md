@@ -102,8 +102,6 @@ The estimand is the effect of the abolition on the binding ("treated") Member St
 
 ```
 repo/
-    original_notebook/
-        milk_quota_full_analysis.ipynb     # full exploratory analysis, all outputs
     production_notebooks/
         01_volume.ipynb                    # quantity: DiD + synthetic control + inference
         02_price.ipynb                     # price: the same design, run independently
@@ -115,9 +113,6 @@ repo/
         estimation.py                      # event-study DiD (pyfixest)
         synth.py                           # synthetic control (standard + augmented)
     assets/                                # charts
-    data/
-        raw/                               # source files (gitignored — see below)
-        processed/                         # panels + saved gaps (gitignored)
     requirements.txt
 ```
 
@@ -128,8 +123,8 @@ The original notebook holds the full exploratory analysis with all intermediate 
 ## How to run it
 
 ```
-git clone https://github.com/JuanGarridoGarcia/More-Milk-Same-Price-Causal-Evaluation-EU-Milk-Quota-Abolition
-cd More-Milk-Same-Price-Causal-Evaluation-EU-Milk-Quota-Abolition
+git clone https://github.com/JuanGarridoGarcia/More-Milk-Same-Price-Causal-Evaluation-EU-Milk-Quota-Abolition-
+cd More-Milk-Same-Price-Causal-Evaluation-EU-Milk-Quota-Abolition-
 pip install -r requirements.txt
 ```
 
