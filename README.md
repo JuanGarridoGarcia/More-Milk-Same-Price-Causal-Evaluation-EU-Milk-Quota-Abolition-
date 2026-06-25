@@ -55,7 +55,7 @@ Volume | Price
 
 ### 3. Synthetic control: a second, assumption-free estimate
 
-Instead of assuming parallel trends, this rebuilds each treated country's *own* pre-2015 path from a weighted mix of controls. The treated-minus-synthetic gap opens for volume and stays flat for price — agreeing with the event study under entirely different assumptions.
+Instead of assuming parallel trends, this rebuilds each treated country's *own* pre-2015 path from a weighted mix of controls. The treated-minus-synthetic gap opens for volume and stays flat for price, agreeing with the event study under entirely different assumptions.
 
 Volume | Price
 :---:|:---:
@@ -133,7 +133,7 @@ cd More-Milk-Same-Price-Causal-Evaluation-EU-Milk-Quota-Abolition
 pip install -r requirements.txt
 ```
 
-Place the source files in `data/raw/` — Eurostat cows' milk collection (`apro_mk_colm`) for deliveries, and the EU Milk Market Observatory raw-milk price Excel for price — then run the production notebooks in order: `01_volume`, `02_price`, `03_income`.
+Place the source files in `data/raw/`, Eurostat cows' milk collection (`apro_mk_colm`) for deliveries, and the EU Milk Market Observatory raw-milk price Excel for price, then run the production notebooks in order: `01_volume`, `02_price`, `03_income`.
 
 Data sources: [Eurostat](https://ec.europa.eu/eurostat) (`apro_mk_colm`) and the [EU Milk Market Observatory](https://agridata.ec.europa.eu/extensions/DashboardMilk/MilkProduction.html) (raw milk prices).
 
