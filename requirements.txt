@@ -1,15 +1,17 @@
+# Exact versions the published notebook outputs were produced with (Python 3.13).
+
 # Core scientific stack
-pandas>=2.0
-numpy>=1.24
-scipy>=1.10
-matplotlib>=3.7
+pandas==3.0.6
+numpy==2.5.4
+scipy==1.18.1
+matplotlib==3.11.2
 
 # Difference-in-differences (fixed-effects event study)
-pyfixest>=0.18
+pyfixest==0.60.0
 
-# I/O: Eurostat panel as parquet, MMO price as Excel
-pyarrow>=14.0
-openpyxl>=3.1
+# I/O: synthetic-control gaps as parquet, MMO price as Excel
+pyarrow==26.0.0
+openpyxl==3.1.5
 
 # Eurostat deliveries ingestion (apro_mk_colm)
-eurostat>=1.0
+eurostat==1.1.1
