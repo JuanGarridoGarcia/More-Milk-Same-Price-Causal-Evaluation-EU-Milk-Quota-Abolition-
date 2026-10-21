@@ -111,8 +111,9 @@ repo/
         ingest_price.py                    # MMO farm-gate price   -> panel
         treatment.py                       # binding-quota assignment, period flags
         estimation.py                      # event-study DiD (pyfixest)
-        synth.py                           # synthetic control (standard + ridge-regularised)
+        synth.py                           # synthetic control (standard + ridge-regularised), placebo and group permutation inference
     tests/                                 # unit tests for the src modules (pytest)
+    run_notebooks.py                       # executes the three notebooks in order
     data/
         raw/                               # MMO price Excel (included)
         processed/                         # synthetic-control gaps used by 03_income
@@ -132,7 +133,12 @@ cd More-Milk-Same-Price-Causal-Evaluation-EU-Milk-Quota-Abolition-
 pip install -r requirements.txt
 ```
 
-Then run the notebooks in order, from the repository root or from `production_notebooks/`: `01_volume`, `02_price`, `03_income`.
+Then run the notebooks in order, from the repository root or from `production_notebooks/`: `01_volume`, `02_price`, `03_income`. To execute all three in one go and save their outputs:
+
+```bash
+pip install -r requirements-dev.txt
+python run_notebooks.py
+```
 
 - **Deliveries** are downloaded from Eurostat (`apro_mk_colm`) by `01_volume`, so that notebook needs an internet connection.
 - **Prices** come from the EU Milk Market Observatory export already included in `data/raw/`.

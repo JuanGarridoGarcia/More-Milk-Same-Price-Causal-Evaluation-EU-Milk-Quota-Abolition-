@@ -15,3 +15,15 @@ jobs:
           python-version: "3.13"
       - run: pip install -r requirements-dev.txt
       - run: pytest
+
+  notebooks:
+    # 01_volume needs the live Eurostat API, so CI executes the two notebooks that
+    # only read files in data/ to check they still run end to end.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install -r requirements-dev.txt
+      - run: python run_notebooks.py 02_price 03_income
