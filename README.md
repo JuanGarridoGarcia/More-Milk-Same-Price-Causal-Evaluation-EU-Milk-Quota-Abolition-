@@ -27,7 +27,7 @@ The abolition produced a **clear, robust volume effect and no price penalty rela
 |---|---|---|
 | **Volume** | **+11%** by 2019 | Robust across DiD + synthetic control |
 | **Price** | **~0** (null differential) | Confirmed by **four** independent methods |
-| **Income** | **≈ +9%**, tracking volume | Exact decomposition: income = volume × price |
+| **Income** | **≈ +9%** (+8.6% average 2015-19, +9.3% in 2019), driven by volume | Exact decomposition: income = volume × price |
 
 The price null is not a weakness, it *is* the finding. Raw-milk prices form at the **EU level**, so a supply increase in the treated countries diffuses across the whole market and leaves no treated-vs-control gap. A clear volume effect beside a null price differential is the **signature of an integrated market**, and recognising which questions a treated-vs-control design *can* answer is part of the contribution.
 
@@ -73,7 +73,7 @@ Volume | Price
 
 ## The payoff: farm income
 
-Income is the product of the two outcomes; `log(income) = log(volume) + log(price)`; and the identity holds **country by country**, so the two analyses recombine exactly, regardless of their different control sets. With a real volume gain and a price-neutral result, income tracks volume: the constrained countries produced more, and the integrated market spared them a relative price cut.
+Income is the product of the two outcomes; `log(income) = log(volume) + log(price)`; and the identity holds **country by country**, so the two analyses recombine exactly, regardless of their different control sets. With a real volume gain and a price-neutral result, income rises with volume: +8.6% on average over 2015-19, of which volume contributes +6.2% and the price differential +2.2%, a value inside the fit-error band that reads as noise rather than a gain. The constrained countries produced more, and the integrated market spared them a relative price cut.
 
 ![Income decomposition](assets/income_decomposition.png)
 
