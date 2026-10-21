@@ -1,21 +1,22 @@
 """
-synth.py — Synthetic control (standard and augmented) for the milk-quota study.
+synth.py: Synthetic control (standard and ridge-augmented) for the milk-quota study.
 
 A second, independent estimate of the abolition's effect, on assumptions that
 differ from DiD: for each treated country it builds a counterfactual from a
 combination of control countries chosen to reproduce that country's own
-pre-2015 trajectory — so it absorbs the pre-trend by construction rather than
+pre-2015 trajectory, so it absorbs the pre-trend by construction rather than
 assuming parallel trends.
 
 Two variants
 ------------
 1. Standard SCM (`fit_one`): convex weights (w >= 0, sum w = 1). The synthetic
-   is an interpolation inside the donors' convex hull — never extrapolates.
+   is an interpolation inside the donors' convex hull and never extrapolates.
    Robust and interpretable, but cannot reproduce treated units that lie at the
    edge of / outside that hull (here, the largest producers: DE, IE).
 
-2. Augmented SCM (`fit_one_augmented`): relaxes non-negativity (weights may be
-   negative => controlled extrapolation), regularised by a ridge penalty
+2. Ridge-regularised SCM (`fit_one_augmented`, "augmented" in the notebooks):
+   relaxes non-negativity (weights may be negative => controlled extrapolation),
+   regularised by a ridge penalty
    lambda * ||w||^2, keeping sum w = 1. Solves the constrained ridge problem in
    closed form via a Lagrange multiplier:
 
@@ -27,6 +28,10 @@ Two variants
    The cost of extrapolation: weights are no longer a real convex mix, so the
    counterfactual is less directly interpretable. Pre-fit (pre_rmspe) is the
    objective gauge of whether the relaxation actually helped.
+
+   Note on naming: this is related to, but simpler than, the ridge augmented
+   SCM of Ben-Michael, Feller and Rothstein (2021, JASA), which penalises the
+   distance to the standard SCM weights rather than the weight norm itself.
 
 Outcome in logs, so gaps read as ~% effects, directly comparable to DiD. The
 `outcome` argument switches the analysed series ("milk_deliveries", default, or
@@ -55,8 +60,8 @@ def _prep(panel: pd.DataFrame, log: bool = True, outcome: str = "milk_deliveries
 
     NOTE: this only removes *fully* absent units. Units with a *partial* gap
     (e.g. Croatia, price from 2013 only) keep a column with NaNs; `_pre_block`'s
-    row-wise dropna then governs how that gap propagates — see the coverage note
-    in the handoff. Decide the donor-coverage policy before trusting price fits.
+    row-wise dropna then governs how that gap propagates, which is why the price
+    notebook restricts donors to full-coverage controls before fitting.
     """
     out = panel.copy()
     if log:
@@ -208,7 +213,7 @@ def placebo_gaps(panel, pre_end="2014-12-01", cutoff="2015-04-01",
                  augmented=True, log=True, outcome="milk_deliveries"):
     """In-space placebos: treat each control as if treated, donors = the other
     controls. Returns a dict of results per control, each with its gap and
-    pre/post RMSPE ratio — the null distribution for inference. The number of
+    pre/post RMSPE ratio: the null distribution for inference. The number of
     placebos (hence the minimum attainable p-value) follows the outcome-specific
     control set automatically.
     """

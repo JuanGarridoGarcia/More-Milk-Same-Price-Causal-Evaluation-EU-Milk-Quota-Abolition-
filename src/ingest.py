@@ -1,5 +1,5 @@
 """
-ingest.py — Pull and tidy Eurostat dairy data for the milk-quota DiD panel.
+ingest.py: Pull and tidy Eurostat dairy data for the milk-quota DiD panel.
 
 Fetches monthly cows' milk collected by dairies and reshapes it into a long
 country x month panel with a `milk_deliveries` column, which
@@ -7,12 +7,12 @@ country x month panel with a `milk_deliveries` column, which
 
 Data source
 -----------
-Eurostat 'apro_mk_colm' — Cows' milk collection and products obtained,
+Eurostat 'apro_mk_colm': Cows' milk collection and products obtained,
 monthly data. The dataset carries several products in a product dimension
 (commonly 'dairyprod'); we keep the raw collected cows' milk element. The
 exact dimension name, element code and unit MUST be confirmed against the
-live codelist before filtering — Eurostat renames codes occasionally — which
-is what `inspect_codes` is for. That confirmation happens in 01_data.ipynb.
+live codelist before filtering (Eurostat renames codes occasionally), which
+is what `inspect_codes` is for. That confirmation happens in 01_volume.ipynb.
 
 Requires the Eurostat client:  pip install eurostat
 """
@@ -66,7 +66,7 @@ def _parse_period(s: pd.Series) -> pd.Series:
 
 
 def inspect_codes(long: pd.DataFrame, dim: str) -> list:
-    """List the distinct codes present in a dimension — use this in the
+    """List the distinct codes present in a dimension. Use this in the
     notebook to confirm the right product element and unit before filtering.
     """
     if dim not in long.columns:
@@ -75,12 +75,12 @@ def inspect_codes(long: pd.DataFrame, dim: str) -> list:
 
 
 def build_panel(long, filters, value="value"):
-    """Filtra `long` a una única serie y pasa a panel geo x mes.
+    """Filter `long` down to a single series and reshape it to a geo x month panel.
 
-    filters: dict {dimensión: código}, p.ej.
+    filters: dict {dimension: code}, e.g.
         {"dairyprod": "D1110D", "unit": "THS_T"}
-    Hay que fijar TODA dimensión que no sea geo/time; si no, se solapan
-    varias series.
+    EVERY dimension other than geo/time must be fixed; otherwise several
+    series overlap.
     """
     df = long.copy()
     for dim, code in filters.items():
@@ -89,14 +89,14 @@ def build_panel(long, filters, value="value"):
     df = df[~df["geo"].astype(str).str.startswith(("EU", "EA"))]
     df = df.dropna(subset=[value, "date"])
 
-    # Salvaguarda: tras filtrar, como mucho una fila por país-mes.
+    # Safeguard: after filtering, at most one row per country-month.
     dup = df.groupby(["geo", "date"]).size()
     if (dup > 1).any():
         leftover = [c for c in long.columns
                     if c not in ({"time", "date", value, "geo"} | set(filters))]
         raise ValueError(
-            "Más de una fila por país-mes tras filtrar: queda una dimensión "
-            f"sin fijar. Fija alguna de: {leftover}"
+            "More than one row per country-month after filtering: a dimension "
+            f"is still unfixed. Fix one of: {leftover}"
         )
 
     return (df.groupby(["geo", "date"], as_index=False)[value]
@@ -109,7 +109,7 @@ if __name__ == "__main__":  # pragma: no cover
     # Needs network. In the notebook, run step by step and inspect first:
     long = fetch_long("apro_mk_colm")
     print("Columns:", list(long.columns))
-    # print(inspect_codes(long, "dairyprod"))   # find the collected-milk code
-    # print(inspect_codes(long, "unit"))        # find the right unit
-    # panel = build_panel(long, product="<CONFIRM>", unit="<CONFIRM>")
-    # print(panel.head())
+    print(inspect_codes(long, "dairyprod"))  # confirm the collected-milk code
+    print(inspect_codes(long, "unit"))       # confirm the unit
+    panel = build_panel(long, filters=MILK_DELIVERIES)
+    print(panel.head())

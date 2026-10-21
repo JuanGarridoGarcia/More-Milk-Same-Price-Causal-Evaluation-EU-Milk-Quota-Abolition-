@@ -43,7 +43,7 @@ Before estimating anything, the pre-2015 period must show the treated and contro
 
 Volume | Price
 :---:|:---:
-![Parallel trends — volume](assets/parallel_trends_volume.png) | ![Parallel trends — price](assets/parallel_trends_price.png)
+![Parallel trends: volume](assets/parallel_trends_volume.png) | ![Parallel trends: price](assets/parallel_trends_price.png)
 
 ### 2. Event study: the effect over time
 
@@ -51,15 +51,15 @@ One treated-vs-control coefficient per year, relative to 2014. Volume opens a cl
 
 Volume | Price
 :---:|:---:
-![Event study — volume](assets/event_study_volume.png) | ![Event study — price](assets/event_study_price.png)
+![Event study: volume](assets/event_study_volume.png) | ![Event study: price](assets/event_study_price.png)
 
-### 3. Synthetic control: a second, assumption-free estimate
+### 3. Synthetic control: a second estimate that does not assume parallel trends
 
 Instead of assuming parallel trends, this rebuilds each treated country's *own* pre-2015 path from a weighted mix of controls. The treated-minus-synthetic gap opens for volume and stays flat for price, agreeing with the event study under entirely different assumptions.
 
 Volume | Price
 :---:|:---:
-![Synthetic control gap — volume](assets/synth_gap_volume.png) | ![Synthetic control gap — price](assets/synth_gap_price.png)
+![Synthetic control gap: volume](assets/synth_gap_volume.png) | ![Synthetic control gap: price](assets/synth_gap_price.png)
 
 ### 4. Placebo inference: is the effect real?
 
@@ -67,7 +67,7 @@ Each control is treated as if it had been treated, building the distribution of 
 
 Volume | Price
 :---:|:---:
-![Placebo inference — volume](assets/placebo_volume.png) | ![Placebo inference — price](assets/placebo_price.png)
+![Placebo inference: volume](assets/placebo_volume.png) | ![Placebo inference: price](assets/placebo_price.png)
 
 ---
 
@@ -84,17 +84,17 @@ The grey band marks the synthetic-control noise level (~4%): volume bars clear i
 ## What makes this more than a regression
 
 - **Two outcomes, one identification strategy**, run in parallel so their comparison is clean by construction.
-- **Triangulation across four methods**, DiD event study, standard *and* augmented synthetic control, and permutation inference, so the conclusion never rests on a single set of assumptions.
+- **Triangulation across three estimators plus permutation inference**: a DiD event study, a standard synthetic control and a ridge-regularised synthetic control, so the conclusion never rests on a single set of assumptions.
 - **A null taken seriously.** The price result is a null, and the project treats it as a finding to be stress-tested and explained (market integration), not a failure to be buried.
 - **Identification honesty.** Every estimate is explicitly *relative to the control group*; the limits of what the design can and cannot identify (e.g. an EU-wide aggregate price change) are stated, not glossed over.
-- **Treatment by economic mechanism**, not by data convenience: the treated group is defined by a *binding quota shadow price* — the actual channel through which the policy could bite — not by a country list chosen after the fact.
+- **Treatment by economic mechanism**, not by data convenience: the treated group is the 12 Member States that exceeded their quota and owed the superlevy in the last quota year (2014/15, European Commission figures), that is, the countries where the quota actually bit. The list is fixed by the policy, not chosen after looking at outcomes.
 - **Fail-loud engineering.** Country-code mapping, treatment assignment, and panel completeness are all asserted, so a silent data error halts the run rather than quietly corrupting an estimate.
 
 ---
 
 ## Method in one paragraph
 
-The estimand is the effect of the abolition on the binding ("treated") Member States relative to the non-binding ("control") ones. The **event study** is a fixed-effects difference-in-differences (`log(outcome) ~ year × treated | country + month`, clustered by country): country fixed effects absorb level differences, month fixed effects absorb EU-wide shocks (the 2014 Russian ban, the 2015–16 dairy crash), and the per-year coefficients trace the dynamic effect against a 2014 baseline. The **synthetic control** drops the parallel-trends assumption: for each treated country it builds a counterfactual from a convex mix of controls that reproduces its own pre-2015 path, with an **augmented (ridge) variant** that permits regularised extrapolation for edge cases, every fit judged by the same objective pre-period RMSPE. **Placebo inference** supplies significance by permutation. The two outcomes are then combined on the income identity, country by country.
+The estimand is the effect of the abolition on the binding ("treated") Member States relative to the non-binding ("control") ones. The **event study** is a fixed-effects difference-in-differences (`log(outcome) ~ year × treated | country + month`, clustered by country): country fixed effects absorb level differences, month fixed effects absorb EU-wide shocks (the 2014 Russian ban, the 2015–16 dairy crash), and the per-year coefficients trace the dynamic effect against a 2014 baseline. The **synthetic control** drops the parallel-trends assumption: for each treated country it builds a counterfactual from a convex mix of controls that reproduces its own pre-2015 path, with a **ridge-regularised variant** (weights may be negative, sum to one, ridge penalty chosen by pre-period validation; related to, but simpler than, the ridge augmented SCM of Ben-Michael, Feller and Rothstein, 2021) that permits controlled extrapolation for units at the edge of the donor hull, every fit judged by the same objective pre-period RMSPE. **Placebo inference** supplies significance by permutation. The two outcomes are then combined on the income identity, country by country.
 
 ---
 
@@ -105,30 +105,45 @@ repo/
     production_notebooks/
         01_volume.ipynb                    # quantity: DiD + synthetic control + inference
         02_price.ipynb                     # price: the same design, run independently
-        03_income.ipynb                    # income = volume × price decomposition
+        03_income.ipynb                    # income = volume x price decomposition
     src/
         ingest.py                          # Eurostat deliveries  -> panel
         ingest_price.py                    # MMO farm-gate price   -> panel
         treatment.py                       # binding-quota assignment, period flags
         estimation.py                      # event-study DiD (pyfixest)
-        synth.py                           # synthetic control (standard + augmented)
+        synth.py                           # synthetic control (standard + ridge-regularised)
+    tests/                                 # unit tests for the src modules (pytest)
+    data/
+        raw/                               # MMO price Excel (included)
+        processed/                         # synthetic-control gaps used by 03_income
     assets/                                # charts
     requirements.txt
 ```
 
-The original notebook holds the full exploratory analysis with all intermediate outputs. The production notebooks are a clean, modular reorganisation: each step is preceded by the reasoning that motivates it and followed by the conclusions drawn from its output.
+Each production notebook states the reasoning before every step and the conclusion drawn from its output.
 
 ---
 
 ## How to run it
 
-```
+```bash
 git clone https://github.com/JuanGarridoGarcia/More-Milk-Same-Price-Causal-Evaluation-EU-Milk-Quota-Abolition-
 cd More-Milk-Same-Price-Causal-Evaluation-EU-Milk-Quota-Abolition-
 pip install -r requirements.txt
 ```
 
-Place the source files in `data/raw/`, Eurostat cows' milk collection (`apro_mk_colm`) for deliveries, and the EU Milk Market Observatory raw-milk price Excel for price, then run the production notebooks in order: `01_volume`, `02_price`, `03_income`.
+Then run the notebooks in order, from the repository root or from `production_notebooks/`: `01_volume`, `02_price`, `03_income`.
+
+- **Deliveries** are downloaded from Eurostat (`apro_mk_colm`) by `01_volume`, so that notebook needs an internet connection.
+- **Prices** come from the EU Milk Market Observatory export already included in `data/raw/`.
+- `03_income` only needs the two gap files that `01_volume` and `02_price` write to `data/processed/`.
+
+To run the unit tests:
+
+```bash
+pip install -r requirements-dev.txt
+pytest
+```
 
 Data sources: [Eurostat](https://ec.europa.eu/eurostat) (`apro_mk_colm`) and the [EU Milk Market Observatory](https://agridata.ec.europa.eu/extensions/DashboardMilk/MilkProduction.html) (raw milk prices).
 
@@ -136,7 +151,7 @@ Data sources: [Eurostat](https://ec.europa.eu/eurostat) (`apro_mk_colm`) and the
 
 ## Limitations
 
-This is a portfolio research project, and its conclusions are bounded accordingly. Every effect is measured **relative to the control group**, not in absolute terms: because treated and control share the same EU-level price market, an EU-wide price change is invisible to this design, so the absolute income gain could be smaller than the relative one. The price control pool is thin (the UK is absent from the price data; Croatia, Malta and partial-coverage donors are dropped on their own evidence), which widens per-country noise and coarsens placebo resolution. The post-period spans the 2015–16 dairy crash and the 2014 Russian import ban, large EU-wide price shocks, absorbed only insofar as they hit both groups alike. Cyprus and Ireland fall out of the income step on fit and coverage grounds, and Luxembourg's price series ends in 2018. All of these are documented in-line in the notebooks.
+This is a portfolio research project, and its conclusions are bounded accordingly. Every effect is measured **relative to the control group**, not in absolute terms: because treated and control share the same EU-level price market, an EU-wide price change is invisible to this design, so the absolute income gain could be smaller than the relative one. The price control pool is thin (the UK is absent from the price data; Croatia, Malta and partial-coverage donors are dropped on their own evidence), which widens per-country noise and coarsens placebo resolution. The post-period spans the 2015–16 dairy crash and the 2014 Russian import ban, large EU-wide price shocks, absorbed only insofar as they hit both groups alike. Cyprus and Ireland fall out of the income step on fit and coverage grounds, and Luxembourg's price series ends in 2018. The synthetic-control fit thresholds (pre-RMSPE below 0.12 for volume, 0.10 for price) are set at the natural break in each outcome's fit distribution, so they are a judgement call. Inference rests on 27 country clusters (12 treated) for the event study and on a small placebo pool for the synthetic control, which bounds the smallest attainable p-value. All of these are documented in-line in the notebooks.
 
 ---
 
