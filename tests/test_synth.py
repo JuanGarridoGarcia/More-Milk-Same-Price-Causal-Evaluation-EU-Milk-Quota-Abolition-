@@ -92,3 +92,37 @@ def test_unknown_statistic_rejected():
     results, _, _ = synth.run_all_treated(df, pre_end=PRE_END)
     with pytest.raises(ValueError):
         synth.inference_table(results, {}, statistic="median")
+
+
+def _placebo_results(n=15, sd=0.02, seed=0):
+    """Fake placebo_gaps output: zero-mean gap series for n controls."""
+    rng = np.random.default_rng(seed)
+    return {f"C{i}": {"gap": pd.Series(rng.normal(0, sd, len(DATES)), index=DATES)}
+            for i in range(n)}
+
+
+def test_group_permutation_detects_a_shifted_treated_group():
+    placebos = _placebo_results()
+    treated = np.full(11, 0.05)
+    res = synth.group_permutation_test(treated, placebos, cutoff=CUTOFF, n_perm=2_000)
+    assert res["treated_mean"] == pytest.approx(0.05)
+    assert res["observed"] == pytest.approx(res["treated_mean"] - res["control_mean"])
+    assert res["p_value"] < 0.01
+
+
+def test_group_permutation_is_not_significant_under_the_null():
+    placebos = _placebo_results(seed=1)
+    cutoff = pd.Timestamp(CUTOFF)
+    control_pg = [p["gap"][p["gap"].index >= cutoff].mean() for p in placebos.values()]
+    # Treated effects drawn from the same distribution as the placebo effects.
+    treated = np.random.default_rng(2).normal(np.mean(control_pg), np.std(control_pg), 11)
+    res = synth.group_permutation_test(treated, placebos, cutoff=CUTOFF, n_perm=2_000)
+    assert 0.05 < res["p_value"] <= 1
+
+
+def test_group_permutation_is_reproducible_with_a_seed():
+    placebos = _placebo_results()
+    treated = np.linspace(0.0, 0.02, 11)
+    a = synth.group_permutation_test(treated, placebos, cutoff=CUTOFF, n_perm=500, seed=3)
+    b = synth.group_permutation_test(treated, placebos, cutoff=CUTOFF, n_perm=500, seed=3)
+    assert a == b

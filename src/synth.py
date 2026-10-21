@@ -273,6 +273,46 @@ def inference_table(treated_results, placebo_results, units=None,
     return pd.DataFrame(rows).set_index("unit").sort_values(statistic, ascending=False)
 
 
+def group_permutation_test(treated_post_gaps, placebo_results, cutoff="2015-04-01",
+                           n_perm: int = 20_000, seed: int = 0) -> dict:
+    """Group-level permutation test: is the average treated effect larger than
+    the average placebo effect?
+
+    The per-unit test asks whether each country stands out on its own, which a
+    pool of ~15 placebos cannot resolve below p ~ 0.06. This test pools the
+    signed mean post-period gaps of the treated units and of the control
+    placebos, shuffles the treated/control labels `n_perm` times and compares
+    the observed difference in means with that null distribution.
+
+    treated_post_gaps : signed mean post gap per treated unit (e.g. the
+                        'post_gap' column of `inference_table`), in a fixed order
+    placebo_results   : output of `placebo_gaps`
+
+    One-sided p = (1 + #permutations with difference >= observed) / (1 + n_perm).
+    Returns treated_mean, control_mean, observed, p_value and n_perm.
+    """
+    cutoff = pd.Timestamp(cutoff)
+    treated_pg = np.asarray(treated_post_gaps, dtype=float)
+    control_pg = np.array([p["gap"][p["gap"].index >= cutoff].dropna().mean()
+                           for p in placebo_results.values()])
+    observed = treated_pg.mean() - control_pg.mean()
+
+    pooled = np.concatenate([treated_pg, control_pg])
+    n_t = len(treated_pg)
+    rng = np.random.default_rng(seed)
+    perm = np.empty(n_perm)
+    for i in range(n_perm):
+        x = rng.permutation(pooled)
+        perm[i] = x[:n_t].mean() - x[n_t:].mean()
+    p_value = (1 + np.sum(perm >= observed)) / (1 + n_perm)
+
+    return {"treated_mean": float(treated_pg.mean()),
+            "control_mean": float(control_pg.mean()),
+            "observed": float(observed),
+            "p_value": float(p_value),
+            "n_perm": n_perm}
+
+
 def plot_placebo(treated_gap, placebo_results, cutoff="2015-04-01",
                  max_pre_rmspe=None, label="treated (avg)", ax=None):
     """Spaghetti plot: placebo gaps in grey, the treated effect in colour.
