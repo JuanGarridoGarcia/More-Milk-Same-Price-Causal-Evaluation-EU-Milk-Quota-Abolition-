@@ -1,28 +1,33 @@
 """
-ingest_price.py — Load EU Milk Market Observatory farm-gate raw milk prices
+ingest_price.py: Load EU Milk Market Observatory farm-gate raw milk prices
 and shape them into a geo x month panel for the price analysis.
 
 Source: agridata.ec.europa.eu (Milk Market Observatory) "Raw milk prices",
 monthly, EUR/100 kg, Member State notifications via ISAMM.
 
-The MMO export codes Member States as EU protocol-order numbers — Belgium=10,
+The MMO export codes Member States as EU protocol-order numbers: Belgium=10,
 Bulgaria=20, ..., with Croatia inserted as 105 (it joined the EU in 2013, so it
 was slotted between France=100 and Italy=110 without renumbering), ...,
 Sweden=260. We map those to Eurostat geo codes so the price panel aligns with
 the deliveries panel.
 
 `build_price_panel` returns a self-contained DiD panel (geo, date, milk_price +
-treatment/period flags) built entirely from the price data — the price analysis
+treatment/period flags) built entirely from the price data, so the price analysis
 is independent of the deliveries sample. `merge_price` is kept only for the
 income finale, where price and deliveries are joined country by country.
 
-IMPORTANT: the price export is EU-27 — the United Kingdom is absent. UK is a
+IMPORTANT: the price export is EU-27, so the United Kingdom is absent. UK is a
 control in the deliveries analysis but cannot be one for the price outcome.
 """
 
 from __future__ import annotations
 
 import pandas as pd
+
+# Treatment is a property of the policy, identical across outcomes, so the
+# binding list and the abolition date come from the single source of truth in
+# treatment.py instead of being redefined here.
+from treatment import ABOLITION_DATE, BINDING_COUNTRIES
 
 # MMO numeric Member-State codes (EU protocol order) -> Eurostat geo codes.
 CODE2GEO = {
@@ -31,14 +36,6 @@ CODE2GEO = {
     140: "LT", 150: "LU", 160: "HU", 170: "MT", 180: "NL", 190: "AT", 200: "PL",
     210: "PT", 220: "RO", 230: "SI", 240: "SK", 250: "FI", 260: "SE",
 }
-
-# The only thing carried over from the quantity project: the 12 Member States
-# with a binding quota (positive shadow price). Treatment is a property of the
-# policy, identical across outcomes, so the list is reused verbatim. Defined here
-# to keep the price ingest self-contained.
-BINDING_COUNTRIES = ["AT", "BE", "CY", "DE", "DK", "EE",
-                     "ES", "IE", "IT", "LU", "NL", "PL"]
-ABOLITION_DATE = pd.Timestamp("2015-04-01")   # quota gone from 1 Apr 2015
 
 
 def load_price(path, code_col="Member State", year_col="Year",
@@ -68,11 +65,11 @@ def build_price_panel(path) -> pd.DataFrame:
 
     Output columns: geo, date, milk_price, treated, post, treated_post (one row
     per country-month). Reuses `load_price` for the Excel parsing and the
-    CODE2GEO mapping, then stamps the treatment/period flags — so the price panel
+    CODE2GEO mapping, then stamps the treatment/period flags, so the price panel
     is built from the price data alone, not from the deliveries sample.
 
-    treated : 1 if the country had a binding quota (BINDING_COUNTRIES), else 0
-              — constant over time, a property of the country.
+    treated : 1 if the country had a binding quota (BINDING_COUNTRIES), else 0;
+              constant over time, a property of the country.
     post    : 1 from the April-2015 abolition onward, else 0.
 
     Fails loud if any binding country is absent from the price data: the EL/UK
@@ -94,7 +91,7 @@ def merge_price(panel: pd.DataFrame, price: pd.DataFrame, how="left") -> pd.Data
     """Merge milk_price onto the deliveries panel on [geo, date].
 
     With how='left', UK (and any country absent from the price data) keeps its
-    rows with milk_price = NaN — drop those before the price analysis. Kept for
+    rows with milk_price = NaN; drop those before the price analysis. Kept for
     the income finale (price x quantity), not for building the price panel.
     """
     return panel.merge(price, on=["geo", "date"], how=how)

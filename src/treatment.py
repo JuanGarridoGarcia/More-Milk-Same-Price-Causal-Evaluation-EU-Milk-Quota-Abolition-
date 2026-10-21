@@ -1,5 +1,5 @@
 """
-treatment.py — Treatment, control universe and period assignment for the
+treatment.py: Treatment, control universe and period assignment for the
 milk-quota difference-in-differences.
 
     treated : 1 if the Member State had a *binding* milk quota at abolition,
@@ -7,18 +7,24 @@ milk-quota difference-in-differences.
     post    : 1 for observations from the abolition date (April 2015) onward.
 
 The analysis universe is EU-28 (the UK was still a member in 2015): 12 binding
-(treated) + 16 non-binding (control). Countries outside this set — EU candidate
-and third countries that Eurostat also reports (Albania, Norway, Switzerland,
-Serbia, Turkey, ...) — are NOT valid counterfactuals and are dropped.
+(treated) + 16 non-binding (control). Countries outside this set (EU candidate
+and third countries that Eurostat also reports: Albania, Norway, Switzerland,
+Serbia, Turkey, ...) are NOT valid counterfactuals and are dropped.
 
 On the definition of `treated`
 ------------------------------
 A quota is *binding* when it actively constrains production: the country
 delivers up to (or beyond, paying the superlevy) its national quota, so its
-quota shadow value is > 0. The clean measure is the pre-abolition quota fill
-rate; the documented list of the 12 binding Member States below was derived
-from exactly that criterion. The fill-rate reconstruction is kept as a
-robustness check for when/if the historical quota series is located.
+quota shadow value is > 0. The observable evidence is the superlevy itself: in
+the last quota year (2014/15) exactly 12 Member States exceeded their national
+quota and were liable for the levy (European Commission provisional figures,
+October 2015): BE, DK, DE, EE, IE, ES, IT, CY, LU, NL, AT and PL. That is the
+treated group below. It is fixed by the policy before any outcome is looked
+at, so it cannot be tuned to the results.
+
+Source: European Commission figures for the 2014/15 quota year, as reported in
+"Milk producers in 12 EU states face superlevy fines", Farmers Weekly,
+22 October 2015.
 """
 
 from __future__ import annotations
@@ -33,7 +39,7 @@ BINDING_COUNTRIES = frozenset({
     "DE", "IE", "NL", "DK", "AT", "BE", "IT", "PL", "ES", "CY", "LU", "EE",
 })
 
-# 16 non-binding EU-28 Member States — the control / donor pool.
+# 16 non-binding EU-28 Member States: the control / donor pool.
 # Note the Eurostat quirks: Greece is 'EL', the UK is 'UK'.
 # Watch list for later trimming: HR (joined the EU only in 2013, short
 # pre-period) and MT (negligible industrial collection).
