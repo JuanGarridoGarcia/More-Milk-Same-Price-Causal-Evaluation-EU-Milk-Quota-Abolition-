@@ -1,0 +1,5 @@
+# Keep line endings consistent across Windows and Linux runs
+*.ipynb text eol=lf
+*.py text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
